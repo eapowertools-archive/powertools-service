@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
 using System.ServiceProcess;
 
@@ -7,6 +6,9 @@ namespace PowerToolsService
 {
 	public partial class Service : ServiceBase
 	{
+		public static string ASSEMBLY_DIRECTORY = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+		public ServiceController _serviceController;
+
 		public Service()
 		{
 			InitializeComponent();
@@ -14,21 +16,9 @@ namespace PowerToolsService
 
 		protected override void OnStart(string[] args)
 		{
-			LoadServicesFile();
+			_serviceController = new ServiceController(Path.Combine(ASSEMBLY_DIRECTORY, "services.conf"));
 		}
 
-		private void LoadServicesFile()
-		{
-			string configDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-			string configPath = Path.Combine(configDir, "services.conf");
-			string configText = File.ReadAllText(configPath);
-
-			IEnumerable<IserviceCon> >
-			
-		}
-
-		protected override void OnStop()
-		{
-		}
+		protected override void OnStop() {}
 	}
 }

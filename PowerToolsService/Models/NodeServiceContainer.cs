@@ -2,6 +2,7 @@
 {
 	public class NodeServiceContainer : IPowerToolsServiceContainer
 	{
+		public string ServiceContainerName { get; set; }
 		public string Identity { get; set; }
 		public bool Enabled { get; set; }
 		public string DisplayName { get; set; }

@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Runtime.Remoting.Messaging;
 using System.Threading;
+using System.Threading.Tasks;
 using PowerToolsService.Models;
 
 namespace PowerToolsService
@@ -10,13 +14,24 @@ namespace PowerToolsService
 	{
 		public static string SERVICE_CONTAINER_KEY = "ServiceContainerName";
 
-		private IEnumerable<Thread> _serviceThreads = new List<Thread>();
+		private ConcurrentBag<ProcessController> _serviceProcesses = new ConcurrentBag<ProcessController>();
 
 		public ServiceController(string configFile)
 		{
 			IList<IDictionary<string, string>> serviceList = this.GetServiceTextList(configFile);
-
 			IList<IPowerToolsServiceContainer> serviceContainers = this.CreateServiceContainers(serviceList);
+			this.CreateProcesses(serviceContainers);
+		}
+
+		private void CreateProcesses(IList<IPowerToolsServiceContainer> serviceContainers)
+		{
+			foreach (IPowerToolsServiceContainer serviceContainer in serviceContainers)
+			{
+				ProcessController pc = new ProcessController(serviceContainer);
+				pc.Start();
+				_serviceProcesses.Add(pc);
+
+			}
 		}
 
 		private IList<IDictionary<string, string>> GetServiceTextList(string configFile)
@@ -66,8 +81,8 @@ namespace PowerToolsService
 						ServiceContainerName = serviceDictionary[SERVICE_CONTAINER_KEY],
 						DisplayName = serviceDictionary["DisplayName"],
 						Enabled = Boolean.Parse(serviceDictionary["Enabled"]),
-						ExecutionPath = Path.Combine(Service.ASSEMBLY_DIRECTORY, serviceDictionary["ExePath"]),
-						FilePath = Path.Combine(Service.ASSEMBLY_DIRECTORY, serviceDictionary["Script"]),
+						ExecutionPath = Path.IsPathRooted(serviceDictionary["ExePath"]) ? serviceDictionary["ExePath"] : Path.Combine(Service.ASSEMBLY_DIRECTORY, serviceDictionary["ExePath"]),
+						FilePath = Path.IsPathRooted(serviceDictionary["Script"]) ? serviceDictionary["Script"] : Path.Combine(Service.ASSEMBLY_DIRECTORY, serviceDictionary["Script"]),
 						Identity = serviceDictionary["Identity"]
 					});
 				}
@@ -78,6 +93,14 @@ namespace PowerToolsService
 			}
 
 			return powertoolServices;
+		}
+
+		public void StopAll()
+		{
+			foreach (ProcessController serviceProcess in _serviceProcesses)
+			{
+				serviceProcess.Stop();
+			}
 		}
 	}
 }

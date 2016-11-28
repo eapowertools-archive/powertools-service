@@ -19,6 +19,9 @@ namespace PowerToolsService
 			_serviceController = new ServiceController(Path.Combine(ASSEMBLY_DIRECTORY, "services.conf"));
 		}
 
-		protected override void OnStop() {}
+		protected override void OnStop()
+		{
+			_serviceController.StopAll();
+		}
 	}
 }

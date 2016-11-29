@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Runtime.Remoting.Messaging;
-using System.Threading;
-using System.Threading.Tasks;
 using PowerToolsService.Models;
 
 namespace PowerToolsService
@@ -14,7 +10,7 @@ namespace PowerToolsService
 	{
 		public static string SERVICE_CONTAINER_KEY = "ServiceContainerName";
 
-		private ConcurrentBag<ProcessController> _serviceProcesses = new ConcurrentBag<ProcessController>();
+		private readonly ConcurrentBag<ProcessController> _serviceProcesses = new ConcurrentBag<ProcessController>();
 
 		public ServiceController(string configFile)
 		{
@@ -30,7 +26,6 @@ namespace PowerToolsService
 				ProcessController pc = new ProcessController(serviceContainer);
 				pc.Start();
 				_serviceProcesses.Add(pc);
-
 			}
 		}
 

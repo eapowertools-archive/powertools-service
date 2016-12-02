@@ -10,7 +10,7 @@ namespace PowerToolsService.Models
 			ServiceID = rand.Next(1, 1000);
 		}
 
-		public int ServiceID { get; set; }
+		public int ServiceID { get; private set; }
 		public string ServiceContainerName { get; set; }
 		public string Identity { get; set; }
 		public bool Enabled { get; set; }

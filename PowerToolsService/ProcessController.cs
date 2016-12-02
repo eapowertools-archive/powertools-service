@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 using PowerToolsService.Models;
 
 namespace PowerToolsService
@@ -6,7 +8,7 @@ namespace PowerToolsService
 	public class ProcessController
 	{
 		private readonly Process _process;
-		private IPowerToolsServiceContainer _serviceContainer;
+		private readonly IPowerToolsServiceContainer _serviceContainer;
 
 		public ProcessController(IPowerToolsServiceContainer container)
 		{
@@ -23,6 +25,11 @@ namespace PowerToolsService
 					Arguments = "\"" + container.FilePath + "\""
 				}
 			};
+		}
+
+		public string GetProcessDisplayName()
+		{
+			return _serviceContainer.DisplayName;
 		}
 
 		public void Start()

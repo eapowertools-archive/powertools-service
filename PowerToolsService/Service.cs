@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
 using System.ServiceProcess;
 using log4net.Core;
@@ -20,8 +19,14 @@ namespace PowerToolsService
 			InitializeComponent();
 		}
 
+		public FileLogger Logger
+		{
+			get { return _logger; }
+		}
+
 		protected override void OnStart(string[] args)
 		{
+			_logger.Log("Starting up the EAPowerTools Service Manager.", LogType.Info);
 			if (args.Length > 1)
 			{
 				_logger.Log("Invalid number of startup parameters. Can only have one of the following log levels for startup parameters: 'OFF','FATAL','ERROR','WARN','INFO','DEBUG','ALL'. Will default to 'Info' level logging.", LogType.Error);
@@ -61,7 +66,7 @@ namespace PowerToolsService
 				_logger.Log("Using default value of 'Info' for log level", LogType.Info);
 			}
 
-			_serviceController = new ServiceController(Path.Combine(ASSEMBLY_DIRECTORY, "services.conf"));
+			_serviceController = new ServiceController(this, Path.Combine(ASSEMBLY_DIRECTORY, "services.conf"));
 		}
 
 		protected override void OnStop()

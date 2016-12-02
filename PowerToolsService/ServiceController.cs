@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Runtime.Remoting.Messaging;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Linq;
+using PowerToolsService.Logging;
 using PowerToolsService.Models;
 
 namespace PowerToolsService
@@ -14,12 +12,16 @@ namespace PowerToolsService
 	{
 		public static string SERVICE_CONTAINER_KEY = "ServiceContainerName";
 
-		private ConcurrentBag<ProcessController> _serviceProcesses = new ConcurrentBag<ProcessController>();
+		private readonly ConcurrentBag<ProcessController> _serviceProcesses = new ConcurrentBag<ProcessController>();
+		private readonly Service _parentService;
 
-		public ServiceController(string configFile)
+		public ServiceController(Service parentService, string configFile)
 		{
+			_parentService = parentService;
+
 			IList<IDictionary<string, string>> serviceList = this.GetServiceTextList(configFile);
 			IList<IPowerToolsServiceContainer> serviceContainers = this.CreateServiceContainers(serviceList);
+
 			this.CreateProcesses(serviceContainers);
 		}
 
@@ -27,10 +29,10 @@ namespace PowerToolsService
 		{
 			foreach (IPowerToolsServiceContainer serviceContainer in serviceContainers)
 			{
+				_parentService.Logger.Log(String.Format("Found service '{0}' in config file. Starting service.", serviceContainer.DisplayName), LogType.Info);
 				ProcessController pc = new ProcessController(serviceContainer);
 				pc.Start();
 				_serviceProcesses.Add(pc);
-
 			}
 		}
 
@@ -76,15 +78,22 @@ namespace PowerToolsService
 			{
 				if (serviceDictionary["ExecType"].ToLower().Equals("nodejs"))
 				{
-					powertoolServices.Add(new NodeServiceContainer()
+					try
 					{
-						ServiceContainerName = serviceDictionary[SERVICE_CONTAINER_KEY],
-						DisplayName = serviceDictionary["DisplayName"],
-						Enabled = Boolean.Parse(serviceDictionary["Enabled"]),
-						ExecutionPath = Path.IsPathRooted(serviceDictionary["ExePath"]) ? serviceDictionary["ExePath"] : Path.Combine(Service.ASSEMBLY_DIRECTORY, serviceDictionary["ExePath"]),
-						FilePath = Path.IsPathRooted(serviceDictionary["Script"]) ? serviceDictionary["Script"] : Path.Combine(Service.ASSEMBLY_DIRECTORY, serviceDictionary["Script"]),
-						Identity = serviceDictionary["Identity"]
-					});
+						powertoolServices.Add(new NodeServiceContainer()
+						{
+							ServiceContainerName = serviceDictionary[SERVICE_CONTAINER_KEY],
+							DisplayName = serviceDictionary["DisplayName"],
+							Enabled = Boolean.Parse(serviceDictionary["Enabled"]),
+							ExecutionPath = Path.IsPathRooted(serviceDictionary["ExePath"]) ? serviceDictionary["ExePath"] : Path.Combine(Service.ASSEMBLY_DIRECTORY, serviceDictionary["ExePath"]),
+							FilePath = Path.IsPathRooted(serviceDictionary["Script"]) ? serviceDictionary["Script"] : Path.Combine(Service.ASSEMBLY_DIRECTORY, serviceDictionary["Script"]),
+							Identity = serviceDictionary["Identity"]
+						});
+					}
+					catch (Exception e)
+					{
+						_parentService.Logger.Log(String.Format("Tried to parse the config '{0}' as a valid service but failed. Exception message: '{1}'", string.Join(",", serviceDictionary.Select(kv => kv.Key + "=" + kv.Value).ToArray()), e.Message), LogType.Error);
+					}
 				}
 				else
 				{
@@ -97,6 +106,7 @@ namespace PowerToolsService
 
 		public void StopAll()
 		{
+			_parentService.Logger.Log("Stopping all services.", LogType.Info);
 			foreach (ProcessController serviceProcess in _serviceProcesses)
 			{
 				serviceProcess.Stop();

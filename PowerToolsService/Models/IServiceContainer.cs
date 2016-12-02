@@ -2,7 +2,7 @@
 {
 	public interface IPowerToolsServiceContainer
 	{
-		int ServiceID { get; set; }
+		int ServiceID { get; }
 		string ServiceContainerName { get; set; }
 		string Identity { get; set; }
 		bool Enabled { get; set; }

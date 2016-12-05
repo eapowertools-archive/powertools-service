@@ -1,18 +1,20 @@
-﻿using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System;
+using System.Diagnostics;
+using PowerToolsService.Logging;
 using PowerToolsService.Models;
 
 namespace PowerToolsService
 {
 	public class ProcessController
 	{
+		private readonly ServiceController _serviceController;
 		private readonly Process _process;
 		private readonly IPowerToolsServiceContainer _serviceContainer;
 
-		public ProcessController(IPowerToolsServiceContainer container)
+		public ProcessController(ServiceController serviceController, IPowerToolsServiceContainer serviceContainer)
 		{
-			_serviceContainer = container;
+			_serviceController = serviceController;
+			_serviceContainer = serviceContainer;
 
 			_process = new Process
 			{
@@ -21,8 +23,8 @@ namespace PowerToolsService
 					CreateNoWindow = true,
 					UseShellExecute = false,
 					WindowStyle = ProcessWindowStyle.Hidden,
-					FileName = container.ExecutionPath,
-					Arguments = "\"" + container.FilePath + "\""
+					FileName = _serviceContainer.ExecutionPath,
+					Arguments = "\"" + _serviceContainer.FilePath + "\""
 				}
 			};
 		}
@@ -39,8 +41,15 @@ namespace PowerToolsService
 
 		public void Stop()
 		{
-			_process.Kill();
-			_process.Close();
+			try
+			{
+				_process.Kill();
+				_process.Close();
+			}
+			catch (Exception e)
+			{
+				_serviceController.ParentService.Logger.Log(String.Format("Cannot stop service '{0}', exception was thrown: '{1}'", _serviceContainer.DisplayName, e.Message), LogType.Error);
+			}
 		}
 	}
 }

@@ -13,11 +13,11 @@ namespace PowerToolsService
 		public static string SERVICE_CONTAINER_KEY = "ServiceContainerName";
 
 		private readonly ConcurrentBag<ProcessController> _serviceProcesses = new ConcurrentBag<ProcessController>();
-		private readonly Service _parentService;
+		public Service ParentService { get; private set; }
 
 		public ServiceController(Service parentService, string configFile)
 		{
-			_parentService = parentService;
+			ParentService = parentService;
 
 			IList<IDictionary<string, string>> serviceList = this.GetServiceTextList(configFile);
 			IList<IPowerToolsServiceContainer> serviceContainers = this.CreateServiceContainers(serviceList);
@@ -29,8 +29,8 @@ namespace PowerToolsService
 		{
 			foreach (IPowerToolsServiceContainer serviceContainer in serviceContainers)
 			{
-				_parentService.Logger.Log(String.Format("Found service '{0}' in config file. Starting service.", serviceContainer.DisplayName), LogType.Info);
-				ProcessController pc = new ProcessController(serviceContainer);
+				ParentService.Logger.Log(String.Format("Starting service: {0}", serviceContainer.DisplayName), LogType.Info);
+				ProcessController pc = new ProcessController(this, serviceContainer);
 				pc.Start();
 				_serviceProcesses.Add(pc);
 			}
@@ -80,7 +80,7 @@ namespace PowerToolsService
 				{
 					try
 					{
-						powertoolServices.Add(new NodeServiceContainer()
+						NodeServiceContainer newContainer = new NodeServiceContainer()
 						{
 							ServiceContainerName = serviceDictionary[SERVICE_CONTAINER_KEY],
 							DisplayName = serviceDictionary["DisplayName"],
@@ -88,11 +88,23 @@ namespace PowerToolsService
 							ExecutionPath = Path.IsPathRooted(serviceDictionary["ExePath"]) ? serviceDictionary["ExePath"] : Path.Combine(Service.ASSEMBLY_DIRECTORY, serviceDictionary["ExePath"]),
 							FilePath = Path.IsPathRooted(serviceDictionary["Script"]) ? serviceDictionary["Script"] : Path.Combine(Service.ASSEMBLY_DIRECTORY, serviceDictionary["Script"]),
 							Identity = serviceDictionary["Identity"]
-						});
+						};
+
+						string containerValidationError = newContainer.Validate();
+
+						if (string.IsNullOrWhiteSpace(containerValidationError))
+						{
+							ParentService.Logger.Log(String.Format("Found service '{0}' in config file.", newContainer.DisplayName), LogType.Info);
+							powertoolServices.Add(newContainer);
+						}
+						else
+						{
+							ParentService.Logger.Log(String.Format("Could not parse service '{0}' because: '{0}'", containerValidationError), LogType.Info);
+						}
 					}
 					catch (Exception e)
 					{
-						_parentService.Logger.Log(String.Format("Tried to parse the config '{0}' as a valid service but failed. Exception message: '{1}'", string.Join(",", serviceDictionary.Select(kv => kv.Key + "=" + kv.Value).ToArray()), e.Message), LogType.Error);
+						ParentService.Logger.Log(String.Format("Tried to parse the config '{0}' as a valid service but failed. Exception message: '{1}'", string.Join(",", serviceDictionary.Select(kv => kv.Key + "=" + kv.Value).ToArray()), e.Message), LogType.Error);
 					}
 				}
 				else
@@ -106,7 +118,7 @@ namespace PowerToolsService
 
 		public void StopAll()
 		{
-			_parentService.Logger.Log("Stopping all services.", LogType.Info);
+			ParentService.Logger.Log("Stopping all services.", LogType.Info);
 			foreach (ProcessController serviceProcess in _serviceProcesses)
 			{
 				serviceProcess.Stop();

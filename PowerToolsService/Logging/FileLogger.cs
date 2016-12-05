@@ -29,7 +29,7 @@ namespace PowerToolsService.Logging
 			RollingFileAppender appender = new RollingFileAppender();
 			appender.Name = "File Logger";
 			appender.File = LOG_FILE_PATH;
-			appender.AppendToFile = false;
+			appender.AppendToFile = true;
 			appender.MaxSizeRollBackups = 3;
 			appender.MaxFileSize = 10 * 1024 * 1024;
 			appender.StaticLogFileName = true;

@@ -8,7 +8,8 @@ You must build the solution to produce a .exe binary file. Once this is done, yo
 ####   Config File
 
 The configuration file is the same format as the `Qlik Sense Service Dispatcher`, and looks as follows:
-```[]
+```
+[]
 Identity=
 Enabled=
 DisplayName=
@@ -18,7 +19,8 @@ Script=
 ```
 
 An example looks like:
-```[iportal]
+```
+[iportal]
 Identity=iportal
 Enabled=true
 DisplayName=iPortal

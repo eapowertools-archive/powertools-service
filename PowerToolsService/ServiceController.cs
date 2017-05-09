@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -19,15 +20,15 @@ namespace PowerToolsService
 		{
 			ParentService = parentService;
 
-			IList<IDictionary<string, string>> serviceList = this.GetServiceTextList(configFile);
-			IList<IPowerToolsServiceContainer> serviceContainers = this.CreateServiceContainers(serviceList);
+			PowerToolServices serviceList = this.GetServices(configFile);
+			this.ValidateContainers(serviceList);
 
-			this.CreateProcesses(serviceContainers);
+			this.CreateProcesses(serviceList);
 		}
 
-		private void CreateProcesses(IList<IPowerToolsServiceContainer> serviceContainers)
+		private void CreateProcesses(PowerToolServices serviceContainers)
 		{
-			foreach (IPowerToolsServiceContainer serviceContainer in serviceContainers)
+			foreach (PowerToolsServiceContainer serviceContainer in serviceContainers.Containers)
 			{
 				ParentService.Logger.Log(String.Format("Starting service: {0}", serviceContainer.DisplayName), LogType.Info);
 				ProcessController pc = new ProcessController(this, serviceContainer);
@@ -36,66 +37,32 @@ namespace PowerToolsService
 			}
 		}
 
-		private IList<IDictionary<string, string>> GetServiceTextList(string configFile)
+		private PowerToolServices GetServices(string configFile)
 		{
-			IList<IDictionary<string, string>> services = new List<IDictionary<string, string>>();
+			PowerToolServices services;
 
-			using (StreamReader reader = new StreamReader(configFile))
+			using (StreamReader r = new StreamReader(configFile))
 			{
-				string line = "";
-				while ((line = reader.ReadLine()) != null)
-				{
-					if (string.IsNullOrWhiteSpace(line))
-					{
-						continue;
-					}
-
-					IDictionary<string, string> serviceDictionary = new Dictionary<string, string>();
-					while (!string.IsNullOrWhiteSpace(line))
-					{
-						int indexOfEquals = line.IndexOf("=");
-						if (indexOfEquals > 0)
-						{
-							serviceDictionary.Add(line.Substring(0, indexOfEquals), line.Substring(indexOfEquals + 1, line.Length - indexOfEquals - 1));
-						}
-						else
-						{
-							serviceDictionary.Add(SERVICE_CONTAINER_KEY, line.Substring(1, line.Length - 2));
-						}
-						line = reader.ReadLine();
-					}
-					services.Add(serviceDictionary);
-				}
+				string json = r.ReadToEnd();
+				services = JsonConvert.DeserializeObject<PowerToolServices>(json);
 			}
 
 			return services;
 		}
 
-		private IList<IPowerToolsServiceContainer> CreateServiceContainers(IList<IDictionary<string, string>> serviceList)
+		private void ValidateContainers(PowerToolServices serviceList)
 		{
-			IList<IPowerToolsServiceContainer> powertoolServices = new List<IPowerToolsServiceContainer>();
-			foreach (IDictionary<string, string> serviceDictionary in serviceList)
+			foreach (PowerToolsServiceContainer serviceContainer in serviceList.Containers)
 			{
-				if (serviceDictionary["ExecType"].ToLower().Equals("nodejs"))
+				if (serviceContainer.ExeType.ToLower().Equals("nodejs"))
 				{
 					try
 					{
-						NodeServiceContainer newContainer = new NodeServiceContainer()
-						{
-							ServiceContainerName = serviceDictionary[SERVICE_CONTAINER_KEY],
-							DisplayName = serviceDictionary["DisplayName"],
-							Enabled = Boolean.Parse(serviceDictionary["Enabled"]),
-							ExecutionPath = Path.IsPathRooted(serviceDictionary["ExePath"]) ? serviceDictionary["ExePath"] : Path.Combine(Service.ASSEMBLY_DIRECTORY, serviceDictionary["ExePath"]),
-							FilePath = Path.IsPathRooted(serviceDictionary["Script"]) ? serviceDictionary["Script"] : Path.Combine(Service.ASSEMBLY_DIRECTORY, serviceDictionary["Script"]),
-							Identity = serviceDictionary["Identity"]
-						};
-
-						string containerValidationError = newContainer.Validate();
+						string containerValidationError = serviceContainer.Validate();
 
 						if (string.IsNullOrWhiteSpace(containerValidationError))
 						{
-							ParentService.Logger.Log(String.Format("Found service '{0}' in config file.", newContainer.DisplayName), LogType.Info);
-							powertoolServices.Add(newContainer);
+							ParentService.Logger.Log(String.Format("Found service '{0}' in config file.", serviceContainer.DisplayName), LogType.Info);
 						}
 						else
 						{
@@ -104,7 +71,7 @@ namespace PowerToolsService
 					}
 					catch (Exception e)
 					{
-						ParentService.Logger.Log(String.Format("Tried to parse the config '{0}' as a valid service but failed. Exception message: '{1}'", string.Join(",", serviceDictionary.Select(kv => kv.Key + "=" + kv.Value).ToArray()), e.Message), LogType.Error);
+						ParentService.Logger.Log(String.Format("Failed during validation. Message: {0}", e.Message), LogType.Error);
 					}
 				}
 				else
@@ -112,8 +79,6 @@ namespace PowerToolsService
 					throw new NotImplementedException("Only services of 'ExecType' equal to 'nodejs' are currently supported.");
 				}
 			}
-
-			return powertoolServices;
 		}
 
 		public void StopAll()

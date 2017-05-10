@@ -7,6 +7,7 @@ namespace PowerToolsService.Models
 {
 	public class PowerToolServices
 	{
+		[JsonProperty("configs")]
 		public List<PowerToolsServiceContainer> Containers { get; set; }
 
 	}

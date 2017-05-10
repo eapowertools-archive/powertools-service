@@ -38,6 +38,10 @@
       <HintPath>..\packages\log4net.2.0.5\lib\net45-full\log4net.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.10.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -50,7 +54,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Logging\FileLogger.cs" />
-    <Compile Include="Models\NodeServiceContainer.cs" />
     <Compile Include="Models\IPowerToolsServiceContainer.cs" />
     <Compile Include="ProcessController.cs" />
     <Compile Include="Service.cs">

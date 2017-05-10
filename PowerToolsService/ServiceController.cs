@@ -1,9 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using Newtonsoft.Json;
 using PowerToolsService.Logging;
 using PowerToolsService.Models;
 
@@ -22,7 +20,6 @@ namespace PowerToolsService
 
 			PowerToolServices serviceList = this.GetServices(configFile);
 			this.ValidateContainers(serviceList);
-
 			this.CreateProcesses(serviceList);
 		}
 
@@ -76,6 +73,7 @@ namespace PowerToolsService
 				}
 				else
 				{
+					ParentService.Logger.Log("Only services of 'ExecType' equal to 'nodejs' are currently supported.", LogType.Error);
 					throw new NotImplementedException("Only services of 'ExecType' equal to 'nodejs' are currently supported.");
 				}
 			}

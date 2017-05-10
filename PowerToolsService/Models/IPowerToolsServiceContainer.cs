@@ -1,7 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Newtonsoft.Json;
 
 namespace PowerToolsService.Models
 {
@@ -9,8 +9,8 @@ namespace PowerToolsService.Models
 	{
 		[JsonProperty("configs")]
 		public List<PowerToolsServiceContainer> Containers { get; set; }
-
 	}
+
 	public class PowerToolsServiceContainer : IPowerToolsServiceContainer
 	{
 		private string _filePath;
@@ -28,25 +28,17 @@ namespace PowerToolsService.Models
 		public string DisplayName { get; set; }
 
 		[JsonProperty("ExePath")]
-		public string ExecutionPath {
-			get {
-				return _executionPath;
-			}
-			set
-			{
-				_executionPath = Path.IsPathRooted(value) ? value : Path.Combine(Service.ASSEMBLY_DIRECTORY, value);
-			}
+		public string ExecutionPath
+		{
+			get { return _executionPath; }
+			set { _executionPath = Path.IsPathRooted(value) ? value : Path.Combine(Service.ASSEMBLY_DIRECTORY, value); }
 		}
 
 		[JsonProperty("Script")]
-		public string FilePath {
-			get {
-				return _filePath;
-			}
-			set
-			{
-				_filePath = Path.IsPathRooted(value) ? value : Path.Combine(Service.ASSEMBLY_DIRECTORY, value);
-			}
+		public string FilePath
+		{
+			get { return _filePath; }
+			set { _filePath = Path.IsPathRooted(value) ? value : Path.Combine(Service.ASSEMBLY_DIRECTORY, value); }
 		}
 
 		public string ExeType { get; set; }

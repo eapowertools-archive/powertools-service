@@ -43,6 +43,9 @@ namespace PowerToolsService.Models
 
 		public string ExeType { get; set; }
 
+		[JsonProperty("Args")]
+		public string[] Arguments { get; set; }
+
 		public string Validate()
 		{
 			if (!File.Exists(this.ExecutionPath))
@@ -66,5 +69,6 @@ namespace PowerToolsService.Models
 		string ExecutionPath { get; set; }
 		string FilePath { get; set; }
 		string ExeType { get; set; }
+		string[] Arguments { get; set; }
 	}
 }

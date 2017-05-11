@@ -17,7 +17,7 @@ namespace PowerToolsService
 			_serviceController = serviceController;
 			_serviceContainer = serviceContainer;
 
-			var argsList = (serviceContainer.Arguments.Length > 0) ? String.Join(" ", serviceContainer.Arguments) + " " : "";
+			var argsList = (serviceContainer.Arguments != null && serviceContainer.Arguments.Length > 0) ? String.Join(" ", serviceContainer.Arguments) + " " : "";
 			argsList += "\"" + _serviceContainer.FilePath + "\"";
 
 			_process = new Process

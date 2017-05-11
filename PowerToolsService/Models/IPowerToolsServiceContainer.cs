@@ -1,10 +1,21 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using Newtonsoft.Json;
 
 namespace PowerToolsService.Models
 {
-	public abstract class PowerToolsServiceContainer : IPowerToolsServiceContainer
+	public class PowerToolServices
 	{
+		[JsonProperty("configs")]
+		public List<PowerToolsServiceContainer> Containers { get; set; }
+	}
+
+	public class PowerToolsServiceContainer : IPowerToolsServiceContainer
+	{
+		private string _filePath;
+		private string _executionPath;
+
 		protected PowerToolsServiceContainer()
 		{
 			Random rand = new Random(DateTime.UtcNow.Millisecond);
@@ -12,12 +23,28 @@ namespace PowerToolsService.Models
 		}
 
 		public int ServiceID { get; }
-		public string ServiceContainerName { get; set; }
 		public string Identity { get; set; }
 		public bool Enabled { get; set; }
 		public string DisplayName { get; set; }
-		public string ExecutionPath { get; set; }
-		public string FilePath { get; set; }
+
+		[JsonProperty("ExePath")]
+		public string ExecutionPath
+		{
+			get { return _executionPath; }
+			set { _executionPath = Path.IsPathRooted(value) ? value : Path.Combine(Service.ASSEMBLY_DIRECTORY, value); }
+		}
+
+		[JsonProperty("Script")]
+		public string FilePath
+		{
+			get { return _filePath; }
+			set { _filePath = Path.IsPathRooted(value) ? value : Path.Combine(Service.ASSEMBLY_DIRECTORY, value); }
+		}
+
+		public string ExeType { get; set; }
+
+		[JsonProperty("Args")]
+		public string[] Arguments { get; set; }
 
 		public string Validate()
 		{
@@ -36,11 +63,12 @@ namespace PowerToolsService.Models
 	public interface IPowerToolsServiceContainer
 	{
 		int ServiceID { get; }
-		string ServiceContainerName { get; set; }
 		string Identity { get; set; }
 		bool Enabled { get; set; }
 		string DisplayName { get; set; }
 		string ExecutionPath { get; set; }
 		string FilePath { get; set; }
+		string ExeType { get; set; }
+		string[] Arguments { get; set; }
 	}
 }

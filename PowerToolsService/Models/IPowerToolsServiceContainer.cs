@@ -18,6 +18,7 @@ namespace PowerToolsService.Models
 		public string DisplayName { get; set; }
 		public string ExecutionPath { get; set; }
 		public string FilePath { get; set; }
+		public string[] Arguments { get; set; }
 
 		public string Validate()
 		{
@@ -42,5 +43,6 @@ namespace PowerToolsService.Models
 		string DisplayName { get; set; }
 		string ExecutionPath { get; set; }
 		string FilePath { get; set; }
+		string[] Arguments { get; set; }
 	}
 }

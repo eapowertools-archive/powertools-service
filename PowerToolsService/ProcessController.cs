@@ -16,6 +16,13 @@ namespace PowerToolsService
 			_serviceController = serviceController;
 			_serviceContainer = serviceContainer;
 
+			if (serviceContainer.Arguments.Length > 0)
+			{
+				_serviceController.ParentService.Logger.Log(String.Format("Serivce '{0}' is starting with arguments '{1}'.", _serviceContainer.DisplayName, String.Join(" ", serviceContainer.Arguments)), LogType.Info);
+			}
+			var argsList = (serviceContainer.Arguments.Length > 0) ? String.Join(" ", serviceContainer.Arguments) + " " : "";
+			argsList += "\"" + _serviceContainer.FilePath + "\"";
+
 			_process = new Process
 			{
 				StartInfo =
@@ -24,7 +31,7 @@ namespace PowerToolsService
 					UseShellExecute = false,
 					WindowStyle = ProcessWindowStyle.Hidden,
 					FileName = _serviceContainer.ExecutionPath,
-					Arguments = "\"" + _serviceContainer.FilePath + "\""
+					Arguments = argsList
 				}
 			};
 		}

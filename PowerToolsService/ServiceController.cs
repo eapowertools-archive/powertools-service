@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using PowerToolsService.Logging;
 using PowerToolsService.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace PowerToolsService
 {
@@ -87,7 +89,10 @@ namespace PowerToolsService
 							Enabled = Boolean.Parse(serviceDictionary["Enabled"]),
 							ExecutionPath = Path.IsPathRooted(serviceDictionary["ExePath"]) ? serviceDictionary["ExePath"] : Path.Combine(Service.ASSEMBLY_DIRECTORY, serviceDictionary["ExePath"]),
 							FilePath = Path.IsPathRooted(serviceDictionary["Script"]) ? serviceDictionary["Script"] : Path.Combine(Service.ASSEMBLY_DIRECTORY, serviceDictionary["Script"]),
-							Identity = serviceDictionary["Identity"]
+							Identity = serviceDictionary["Identity"],
+							Arguments = serviceDictionary.ContainsKey("Args") ?
+								JsonConvert.DeserializeObject<JObject>("{\"Arguments\":" + serviceDictionary["Args"] + "}").Children().First().First.ToObject<string[]>() :
+								new string[0]
 						};
 
 						string containerValidationError = newContainer.Validate();

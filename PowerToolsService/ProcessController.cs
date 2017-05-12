@@ -16,6 +16,9 @@ namespace PowerToolsService
 			_serviceController = serviceController;
 			_serviceContainer = serviceContainer;
 
+			var argsList = (serviceContainer.Arguments.Length > 0) ? String.Join(" ", serviceContainer.Arguments) + " " : "";
+			argsList += "\"" + _serviceContainer.FilePath + "\"";
+
 			_process = new Process
 			{
 				StartInfo =
@@ -24,7 +27,7 @@ namespace PowerToolsService
 					UseShellExecute = false,
 					WindowStyle = ProcessWindowStyle.Hidden,
 					FileName = _serviceContainer.ExecutionPath,
-					Arguments = "\"" + _serviceContainer.FilePath + "\""
+					Arguments = argsList
 				}
 			};
 		}
